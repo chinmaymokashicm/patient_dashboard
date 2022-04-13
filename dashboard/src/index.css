@@ -34,6 +34,10 @@ code {
   height: 80%;
 }
 
+.tab-panel {
+  height: 100%;
+}
+
 .patient {
   background-color: rgb(74, 201, 180);
   min-height: 100%;
