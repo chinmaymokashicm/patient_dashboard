@@ -45,6 +45,7 @@ code {
   display: grid;
   grid-template-columns: [first] 30% [line1] 70% [last];
   grid-template-rows: 1fr;
+  padding: 10px;
 }
 
 .patient .search {
