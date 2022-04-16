@@ -1,10 +1,12 @@
 import { Button } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { TextField, Autocomplete, Stack } from "@mui/material";
+
+import EncounterBlock from "./blocks/Encounter";
 
 import getData from "../functions/getData";
 
-function Patient() {
+function Patient({ setIsLoading }) {
   const [encounterData, setEncounterData] = useState(null);
   const [timeline, setTimeline] = useState(null);
   const [autoCompleteOptions, setAutoCompleteOptions] = useState([
@@ -26,6 +28,7 @@ function Patient() {
                     // getPatientIdArray(e.target.value);
                     const patientIds = await getData(
                       null,
+                      setIsLoading,
                       "patients",
                       {
                         $regex: `.*${e.target.value}.*`,
@@ -46,16 +49,53 @@ function Patient() {
             clearOnBlur={false}
             onChange={async (e, patientId) => {
               // Get timeline of the selected Id
-              const encounterDataResults = await getData(e, "encounters", {
-                PATIENT: patientId,
-              });
+              const encounterDataResults = await getData(
+                e,
+                setIsLoading,
+                "encounters",
+                {
+                  PATIENT: patientId,
+                },
+                {},
+                {
+                  START: 1,
+                }
+              );
               setEncounterData(encounterDataResults);
               console.log(encounterDataResults);
             }}
           />
         </Stack>
       </div>
-      <div className="display">{timeline}</div>
+      <div
+        className="display"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          overflowY: "scroll",
+          marginTop: ".5rem",
+        }}
+      >
+        {timeline}
+        {encounterData !== null && (
+          <Fragment>
+            {encounterData.map((encounterDataRow, index) => (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  marginTop: ".5rem",
+                }}
+                key={index}
+              >
+                <EncounterBlock encounterDataRow={encounterDataRow} />
+              </div>
+            ))}
+          </Fragment>
+        )}
+      </div>
     </div>
   );
 }

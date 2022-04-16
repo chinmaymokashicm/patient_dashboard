@@ -2,13 +2,17 @@
 
 import Patient from "./components/Patient";
 import TabPanel from "./components/TabPanel";
+import Loading from "./components/Loading"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, Tab, AppBar } from "@mui/material";
 import Query from "./components/Query";
 
 function App() {
   const [currentTabValue, setCurrentTabValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // IsLoading(setIsLoading)
 
   const TabComponent = (
     <AppBar
@@ -18,7 +22,7 @@ function App() {
       }}
     >
       <Tabs value={currentTabValue} onChange={handleTabs}>
-        <Tab label="Patient" />
+        <Tab label="Patient Timeline" />
         <Tab label="Query Builder" />
       </Tabs>
     </AppBar>
@@ -31,9 +35,10 @@ function App() {
   return (
     <div className="App">
       <div className="main">
+        <Loading isLoading={isLoading}/>
         {TabComponent}
         <TabPanel value={currentTabValue} index={0}>
-          <Patient />
+          <Patient setIsLoading={setIsLoading}/>
         </TabPanel>
         <TabPanel value={currentTabValue} index={1}>
           <Query />
