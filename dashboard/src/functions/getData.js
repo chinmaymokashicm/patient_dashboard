@@ -1,4 +1,4 @@
-async function getData(e, setIsLoading, collection, query = undefined, fields = undefined, sort=undefined) {
+async function getData(e, setIsLoading, collection, query = undefined, fields = undefined, sort=undefined, limit=undefined, aggregate=undefined) {
   setIsLoading(true)
   if (query === undefined) {
     query = {};
@@ -9,15 +9,21 @@ async function getData(e, setIsLoading, collection, query = undefined, fields = 
   if(sort === undefined){
     sort = {}
   }
+  if(limit === undefined){
+    limit = 10
+  }
   console.log(collection)
+  const body = JSON.stringify({
+    collection: collection,
+    query: query,
+    fields: fields,
+    sort: sort,
+    limit: limit,
+    aggregate: aggregate
+  })
   const res = await fetch("http://localhost:5000/api/fetch", {
     method: "POST",
-    body: JSON.stringify({
-      collection: collection,
-      query: query,
-      fields: fields,
-      sort: sort
-    }),
+    body: body,
     headers: {
       "Content-Type": "application/json",
     },

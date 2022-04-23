@@ -6,12 +6,13 @@ import EncounterBlock from "./blocks/Encounter";
 
 import getData from "../functions/getData";
 
-function Patient({ setIsLoading }) {
+function Patient({
+  setIsLoading,
+  autoCompleteOptions,
+  setAutoCompleteOptions,
+}) {
   const [encounterData, setEncounterData] = useState(null);
   const [timeline, setTimeline] = useState(null);
-  const [autoCompleteOptions, setAutoCompleteOptions] = useState([
-    "Start typing",
-  ]);
 
   return (
     <div className="patient">
@@ -62,6 +63,7 @@ function Patient({ setIsLoading }) {
                 }
               );
               setEncounterData(encounterDataResults);
+              setAutoCompleteOptions([patientId]);
               console.log(encounterDataResults);
             }}
           />
@@ -72,26 +74,18 @@ function Patient({ setIsLoading }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          // justifyContent: "center",
           overflowY: "scroll",
-          marginTop: ".5rem",
+          // marginTop: ".5rem",
+          // margin: "auto",
         }}
       >
-        {timeline}
         {encounterData !== null && (
           <Fragment>
             {encounterData.map((encounterDataRow, index) => (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  marginTop: ".5rem",
-                }}
-                key={index}
-              >
+              <span key={index}>
                 <EncounterBlock encounterDataRow={encounterDataRow} />
-              </div>
+              </span>
             ))}
           </Fragment>
         )}

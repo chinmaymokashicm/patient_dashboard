@@ -2,15 +2,18 @@
 
 import Patient from "./components/Patient";
 import TabPanel from "./components/TabPanel";
-import Loading from "./components/Loading"
+import Loading from "./components/Loading";
 
 import { useState, useEffect } from "react";
 import { Tabs, Tab, AppBar } from "@mui/material";
-import Query from "./components/Query";
+import Charts from "./components/Charts";
 
 function App() {
   const [currentTabValue, setCurrentTabValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [autoCompleteOptions, setAutoCompleteOptions] = useState([
+    "Start typing",
+  ]);
 
   // IsLoading(setIsLoading)
 
@@ -23,7 +26,7 @@ function App() {
     >
       <Tabs value={currentTabValue} onChange={handleTabs}>
         <Tab label="Patient Timeline" />
-        <Tab label="Query Builder" />
+        <Tab label="Charts" />
       </Tabs>
     </AppBar>
   );
@@ -35,13 +38,17 @@ function App() {
   return (
     <div className="App">
       <div className="main">
-        <Loading isLoading={isLoading}/>
+        <Loading isLoading={isLoading} />
         {TabComponent}
         <TabPanel value={currentTabValue} index={0}>
-          <Patient setIsLoading={setIsLoading}/>
+          <Patient
+            setIsLoading={setIsLoading}
+            autoCompleteOptions={autoCompleteOptions}
+            setAutoCompleteOptions={setAutoCompleteOptions}
+          />
         </TabPanel>
         <TabPanel value={currentTabValue} index={1}>
-          <Query />
+          <Charts setIsLoading={setIsLoading}/>
         </TabPanel>
       </div>
     </div>

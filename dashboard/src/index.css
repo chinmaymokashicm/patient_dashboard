@@ -75,3 +75,24 @@ code {
   grid-column: line1 / last;
   grid-row: 1fr;
 }
+
+.charts {
+  display: grid;
+  grid-template-columns: [v1] 100% [v2];
+  grid-template-rows: [h1] 10% [h2] auto [h3];
+  background-color: #cae3df;
+  height: 100%;
+  min-height: 100%;
+  padding: 10px;
+}
+
+.charts .parameters {
+  grid-column: v1 / v2;
+  grid-row: h1 / h2;
+  background-color: #dbd5c5;
+}
+
+.charts .viz {
+  grid-column: v1 / v2;
+  grid-row: h2 / h3;
+}

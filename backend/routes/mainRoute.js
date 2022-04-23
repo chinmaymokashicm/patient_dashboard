@@ -74,13 +74,21 @@ router.post(
       });
     }
     queryCollection = collectionsObject[collection]
-    const result = await queryCollection
-      .find(query, fields)
-      .sort(sortBy)
-      .limit(limitQuery);
-    res.status(200).json({
-      result: result,
-    });
+    if(req.body.aggregate === undefined){
+      const result = await queryCollection
+        .find(query, fields)
+        .sort(sortBy)
+        .limit(limitQuery);
+      res.status(200).json({
+        result: result,
+      });
+    }
+    else{
+      const result = await queryCollection.aggregate(req.body.aggregate)
+      res.status(200).json({
+        result: result,
+      });
+    }
   })
 );
 

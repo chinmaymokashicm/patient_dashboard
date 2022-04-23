@@ -2,8 +2,16 @@ import CustomButton from "./CustomButton";
 
 function EncounterBlock(encounterDataRow) {
   encounterDataRow = encounterDataRow.encounterDataRow;
+  const distinctENCOUNTERCLASS = [
+    "ambulatory",
+    "emergency",
+    "inpatient",
+    "urgentcare",
+    "outpatient",
+    "wellness",
+  ];
   const date = new Date(encounterDataRow["START"]);
-  const colorGradient = "linear-gradient(to bottom right, #db928c, #dbd28c)"
+  const colorGradient = "linear-gradient(to bottom right, #db928c, #dbd28c)";
 
   const encounterInfo = (
     <div
@@ -223,6 +231,7 @@ function EncounterBlock(encounterDataRow) {
         // backgroundColor: "green",
         textAlign: "center",
         width: "80%",
+        height: "150px",
         margin: "auto",
         borderRadius: "25px 10px",
       }}
