@@ -78,8 +78,8 @@ code {
 
 .charts {
   display: grid;
-  grid-template-columns: [v1] 100% [v2];
-  grid-template-rows: [h1] 10% [h2] auto [h3];
+  grid-template-columns: [v1] 20% [v2] auto [v3];
+  grid-template-rows: [h1] 100% [h2];
   background-color: #cae3df;
   height: 100%;
   min-height: 100%;
@@ -90,9 +90,11 @@ code {
   grid-column: v1 / v2;
   grid-row: h1 / h2;
   background-color: #dbd5c5;
+  padding-right: 5px;
 }
 
 .charts .viz {
-  grid-column: v1 / v2;
-  grid-row: h2 / h3;
+  grid-column: v2 / v2;
+  grid-row: h1 / h2;
+  padding: 5px;
 }

@@ -22,7 +22,6 @@ import TabPanel from "./TabPanel";
 import { DataGrid } from "@mui/x-data-grid";
 
 function Charts({ setIsLoading }) {
-  const data = [{ name: "Page A", uv: 400, pv: 2400, amt: 2400 }];
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([]);
 
@@ -30,7 +29,7 @@ function Charts({ setIsLoading }) {
   function handleTabs(e, index) {
     setCurrentVizTab(index);
   }
-  const TabComponent = (
+  const VizTabComponent = (
     <AppBar
       position="static"
       style={{
@@ -211,9 +210,9 @@ function Charts({ setIsLoading }) {
     <div className="charts">
       <div className="parameters">
         <Stack
-          direction="row"
+          direction="column"
           spacing={2}
-          divider={<Divider orientation="vertical" flexItem />}
+          divider={<Divider orientation="horizontal" flexItem />}
           width="100%"
         >
           <Select
@@ -320,7 +319,7 @@ function Charts({ setIsLoading }) {
         </Stack>
       </div>
       <div className="viz">
-        {TabComponent}
+        {VizTabComponent}
         <TabPanel value={currentVizTab} index={0}>
           {columns.length > 0 && rows.length > 0 && (
             <DataGrid rows={rows} columns={columns} />
