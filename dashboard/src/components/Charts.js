@@ -2,11 +2,13 @@ import {
   AppBar,
   Button,
   Divider,
+  InputLabel,
   MenuItem,
   Select,
   Stack,
   Tab,
   Tabs,
+  TextField,
 } from "@mui/material";
 import {
   LineChart,
@@ -20,10 +22,49 @@ import { useState, useEffect } from "react";
 import getData from "../functions/getData";
 import TabPanel from "./TabPanel";
 import { DataGrid } from "@mui/x-data-grid";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import YAxisParameters from "./blocks/YAxisParameters";
 
 function Charts({ setIsLoading }) {
+  // Table variables
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([]);
+
+  // X-Axis variables
+  const [xAxisCollectionList, setXAxisCollectionList] = useState([
+    "allergies",
+    "careplans",
+    "conditions",
+    "devices",
+    "encounters",
+    "imaging_studies",
+    "immunizations",
+    "medications",
+    "observations",
+    "organizations",
+    "patients",
+    "payer_transitions",
+    "payers",
+    "procedures",
+    "providers",
+    "supplies",
+  ]);
+  const [xAxisCollectionName, setXAxisCollectionName] = useState("");
+  const [xAxisLabelList, setXAxisLabelList] = useState([]);
+  const [xAxisLabelName, setXAxisLabelName] = useState("");
+
+  // Y-Axis variables
+  const [yAxisCollectionList, setYAxisCollectionList] = useState([]);
+  const [yAxisLabelObjList, setYAxisLabelObjList] = useState([
+    {
+      selectedColumn: null,
+      columns: null,
+      yAxis: null,
+      aggregation: "sum",
+    },
+  ]);
+
+  const [aggregationList, setAggregationList] = useState(["sum", "avg"]);
 
   const [currentVizTab, setCurrentVizTab] = useState(0);
   function handleTabs(e, index) {
@@ -45,166 +86,168 @@ function Charts({ setIsLoading }) {
 
   const [currentResults, setCurrentResults] = useState([]);
 
-  const [collection, setCollection] = useState("");
-  const [xAxis, setXAxis] = useState("");
-  const [yAxis, setYAxis] = useState("");
-  const [aggregation, setAggregation] = useState("");
-  const [chartType, setChartType] = useState("");
+  useEffect(() => {
+    async function getJoinedCollections() {
+      if (xAxisLabelName !== "") {
+        // Get those tables that have the selected x-axis label in them (for joining tables)
+        var collectionListTemp = xAxisCollectionList.filter(
+          (tableName) => tableName !== xAxisCollectionName
+        );
+        var collectionListFinal = [];
+        console.log("collectionListTemp", collectionListTemp);
+        collectionListFinal = await Promise.all(
+          collectionListTemp.map(async (collection) => {
+            const record = await getData(
+              null,
+              setIsLoading,
+              collection,
+              {},
+              { _id: 0 },
+              {},
+              1
+            );
+            const columnNames = Object.keys(record[0]);
+            if (columnNames.includes(xAxisLabelName)) {
+              // console.log(`${collection} contains ${xAxisLabelName}`);
+              return collection;
+            }
+          })
+        );
+        collectionListFinal = [...collectionListFinal, xAxisCollectionName];
+        collectionListFinal = collectionListFinal.filter(
+          (collection) => collection !== undefined
+        );
+        setYAxisCollectionList(collectionListFinal);
+      }
+    }
+    getJoinedCollections();
+  }, [xAxisLabelName]);
 
-  const [collectionList, setCollectionList] = useState([
-    "allergies",
-    "careplans",
-    "conditions",
-    "devices",
-    "encounters",
-    "imaging_studies",
-    "immunizations",
-    "medications",
-    "observations",
-    "organizations",
-    "patients",
-    "payer_transitions",
-    "payers",
-    "procedures",
-    "providers",
-    "supplies",
-  ]);
-  const [xAxisList, setXAxisList] = useState([]);
-  const [yAxisList, setYAxisList] = useState([]);
-  const [aggregationList, setAggregationList] = useState(["sum"]);
-  const [chartTypeList, setChartTypeList] = useState([
-    {
-      name: "LineChart",
-      value: (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            width={500}
-            height={300}
-            data={currentResults}
-            margin={{
-              top: 50,
-              bottom: 50,
-            }}
-          >
-            <XAxis dataKey="_id" />
-            <YAxis />
-            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-            <Line type="monotone" dataKey={aggregation} stroke="#82ca9d" />
-          </LineChart>
-        </ResponsiveContainer>
-      ),
-    },
-  ]);
+  useEffect(() => {
+    console.log(yAxisCollectionList);
+  }, [yAxisCollectionList]);
 
-  async function getAxes(collection) {
-    const record = await getData(
-      null,
-      setIsLoading,
-      collection,
-      {},
-      { _id: 0 },
-      {},
-      1
+  useEffect(() => {
+    console.log(yAxisLabelObjList);
+  }, [yAxisLabelObjList]);
+
+  async function generateQuery() {
+    console.log(
+      "xAxisLabelName, yAxisLabelObjList, aggregation",
+      xAxisLabelName,
+      yAxisLabelObjList
     );
-    const columnNames = Object.keys(record[0]);
-    setXAxisList(columnNames);
-    const yAxis = columnNames.filter(
-      (column) => typeof record[0][column] === "number"
-    );
-    setYAxisList(yAxis);
-  }
+    var yAxisLabelMapping = {};
+    Object.keys(yAxisLabelObjList).map((key) => {
+      // Create a new key if it does not exist
+      if (!(yAxisLabelObjList[key]["selectedColumn"] in yAxisLabelMapping)) {
+        yAxisLabelMapping[yAxisLabelObjList[key]["selectedColumn"]] = {};
+      }
+      if (
+        !(
+          yAxisLabelObjList[key]["yAxis"] in
+          yAxisLabelMapping[yAxisLabelObjList[key]["selectedColumn"]]
+        )
+      ) {
+        yAxisLabelMapping[yAxisLabelObjList[key]["selectedColumn"]][
+          yAxisLabelObjList[key]["yAxis"]
+        ] = [];
+      }
+      if (
+        !yAxisLabelMapping[yAxisLabelObjList[key]["selectedColumn"]][
+          yAxisLabelObjList[key]["yAxis"]
+        ].includes(yAxisLabelObjList[key]["aggregation"])
+      ) {
+        yAxisLabelMapping[yAxisLabelObjList[key]["selectedColumn"]][
+          yAxisLabelObjList[key]["yAxis"]
+        ].push(yAxisLabelObjList[key]["aggregation"]);
+      }
+    });
+    console.log(yAxisLabelMapping);
 
-  async function createChart() {
-    const aggregationQuery = [
-      {
-        $group: {
-          _id: `$${xAxis}`,
-          [aggregation]: {
-            ["$" + aggregation]: {
-              $convert: {
-                input: `$${yAxis}`,
-                to: "double",
-                onError: 0,
-                onNull: 0,
-              },
-            },
-          },
+    var aggregateQueryList = [];
+
+    // })
+    // Looping through each y-axis collection
+    Object.keys(yAxisLabelMapping).forEach((foreignCollection) => {
+      var lookupObj = {
+        $lookup: {
+          from: foreignCollection,
+          localField: xAxisLabelName,
+          foreignField: xAxisLabelName,
+          as: "alias",
         },
-      },
-      {
+      };
+      var projectObj = {
+        $project: {
+          [xAxisLabelName]: 1,
+          _id: 0,
+        },
+      };
+      // Adding fields in the $project object
+      Object.keys(yAxisLabelMapping[foreignCollection]).forEach(
+        (foreignField) => {
+          projectObj["$project"][`alias.${foreignField}`] = 1;
+        }
+      );
+
+      var limitObj = {
         $limit: 20,
-      },
-    ];
+      };
 
-    // {
-    //   "collection": "encounters",
-    //   "aggregate": [
-    //     {
-    //       "$group": {
-    //         "_id": "$ENCOUNTERCLASS",
-    //         "total": {
-    //           "$sum": {
-    //             "$convert": {
-    //               "input": "$BASE_ENCOUNTER_COST",
-    //               "to": "double",
-    //               "onError": 0,
-    //               "onNull": 0
-    //             }
-    //           }
-    //         }
-    //       }
-    //     }
-    //   ]
-    // }
+      var unwindObj = {
+        $unwind: "$alias",
+      };
 
-    console.log(aggregationQuery);
-    const records = await getData(
-      null,
-      setIsLoading,
-      collection,
-      {},
-      {},
-      {},
-      {},
-      aggregationQuery
-    );
+      // Creating the $group object
+      var groupObj = {
+        $group: {
+          _id: `$${xAxisLabelName}`,
+        },
+      };
+      // Adding aggregation functions to the $group object
+      Object.keys(yAxisLabelMapping[foreignCollection]).forEach(
+        (foreignField) => {
+          yAxisLabelMapping[foreignCollection][foreignField].forEach(
+            (aggFunc) => {
+              groupObj["$group"][
+                `${foreignCollection}_${foreignField}_${aggFunc}`
+              ] = {
+                [`$${aggFunc}`]: {
+                  $convert: {
+                    input: `$alias.${foreignField}`,
+                    to: "double",
+                    onError: 0,
+                    onNull: 0,
+                  },
+                },
+              };
+            }
+          );
+        }
+      );
+      aggregateQueryList.push([lookupObj, projectObj, limitObj, unwindObj, groupObj]);
+    });
+    console.log(aggregateQueryList);
+    console.log(xAxisCollectionName)
+    
+    const results = await Promise.all(aggregateQueryList.map(async (aggregateQuery) => {
+      const output = await getData(
+        null,
+        setIsLoading,
+        xAxisCollectionName,
+        {},
+        {},
+        {},
+        {},
+        aggregateQuery
+      );
+      return output
+    }))
+    console.log(results)
 
-    console.log(records);
-    setCurrentResults(records);
-    if (chartType["name"] === undefined) {
-      console.log(chartTypeList[0]["name"]);
-      // setChartType(chartTypeList[0]);
-    }
+    return yAxisLabelMapping;
   }
-
-  useEffect(() => {
-    if (currentResults.length > 0) {
-      const columnNames = Object.keys(currentResults[0]);
-      setColumns(
-        columnNames.map((columnName) => {
-          return {
-            field: columnName,
-            headerName: columnName,
-            flex: 1,
-          };
-        })
-      );
-      setRows(
-        currentResults.map((row, index) => {
-          row["id"] = index + 1;
-          return row;
-        })
-      );
-    }
-  }, [currentResults]);
-
-  useEffect(() => {
-    console.log(columns);
-  }, [columns]);
-
-  useEffect(() => {
-    console.log(rows);
-  }, [rows]);
 
   return (
     <div className="charts">
@@ -215,107 +258,76 @@ function Charts({ setIsLoading }) {
           divider={<Divider orientation="horizontal" flexItem />}
           width="100%"
         >
-          <Select
-            autoWidth
-            value={collection}
-            label="Collection"
-            onChange={(e) => {
-              getAxes(e.target.value);
-              setCollection(e.target.value);
+          <TextField
+            value={xAxisCollectionName}
+            onChange={async (e) => {
+              const record = await getData(
+                null,
+                setIsLoading,
+                e.target.value,
+                {},
+                { _id: 0 },
+                {},
+                1
+              );
+              const columnNames = Object.keys(record[0]);
+              setXAxisLabelList(columnNames);
+              setXAxisCollectionName(e.target.value);
             }}
+            select
+            label="X-Axis Table"
           >
-            {collectionList.length > 0 &&
-              collectionList.map((option) => {
+            {xAxisCollectionList.length > 0 &&
+              xAxisCollectionList.map((option) => {
                 return (
                   <MenuItem key={option} value={option}>
                     {option}
                   </MenuItem>
                 );
               })}
-          </Select>
-          <Select
-            autoWidth
-            value={xAxis}
-            label="X-axis"
+          </TextField>
+          <TextField
+            value={xAxisLabelName}
             onChange={(e) => {
-              setXAxis(e.target.value);
+              setXAxisLabelName(e.target.value);
             }}
+            select
+            label="X-Axis Label"
           >
-            {xAxisList.length > 0 &&
-              xAxisList.map((option) => {
+            {xAxisLabelList.length > 0 &&
+              xAxisLabelList.map((option) => {
                 return (
                   <MenuItem key={option} value={option}>
                     {option}
                   </MenuItem>
                 );
               })}
-          </Select>
-          <Select
-            autoWidth
-            value={yAxis}
-            label="Y-axis"
-            onChange={(e) => {
-              setYAxis(e.target.value);
-            }}
-          >
-            {yAxisList.length > 0 &&
-              yAxisList.map((option) => {
+          </TextField>
+          <div className="y-axis-parameters">
+            {yAxisLabelObjList.length > 0 &&
+              xAxisCollectionList.length > 0 &&
+              yAxisLabelObjList.length > 0 &&
+              yAxisLabelObjList.map((item, index) => {
                 return (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
+                  <YAxisParameters
+                    id={index}
+                    setIsLoading={setIsLoading}
+                    collectionList={yAxisCollectionList}
+                    yAxisLabelObjList={yAxisLabelObjList}
+                    setYAxisLabelObjList={setYAxisLabelObjList}
+                    aggregationList={aggregationList}
+                  />
                 );
               })}
-          </Select>
-          <Select
-            autoWidth
-            value={aggregation}
-            label="Aggregation"
-            onChange={(e) => {
-              setAggregation(e.target.value);
-            }}
-          >
-            {aggregationList.length > 0 &&
-              aggregationList.map((option) => {
-                return (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                );
-              })}
-          </Select>
+          </div>
           <Button
-            onClick={() => {
-              // Run query
-              console.log("Generating");
-              createChart();
-            }}
-            variant="primary"
-            disabled={false}
-            style={{
-              textTransform: "unset",
-            }}
+            color="primary"
+            variant="outlined"
+            startIcon={<TimelineIcon />}
+            onClick={generateQuery}
           >
             Generate
           </Button>
-          <Select
-            autoWidth
-            value={chartType}
-            label="Chart Type"
-            onChange={(e) => {
-              setChartType(e.target.value);
-              console.log(e.target.value);
-            }}
-          >
-            {chartTypeList.length > 0 &&
-              chartTypeList.map((option) => {
-                return (
-                  <MenuItem key={option.name} value={option.value}>
-                    {option.name}
-                  </MenuItem>
-                );
-              })}
-          </Select>
         </Stack>
       </div>
       <div className="viz">
@@ -342,11 +354,7 @@ function Charts({ setIsLoading }) {
                   <XAxis dataKey="_id" />
                   <YAxis />
                   <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-                  <Line
-                    type="monotone"
-                    dataKey={aggregation}
-                    stroke="#82ca9d"
-                  />
+                  <Line type="monotone" dataKey="sum" stroke="#82ca9d" />
                 </LineChart>
               </ResponsiveContainer>
             )}

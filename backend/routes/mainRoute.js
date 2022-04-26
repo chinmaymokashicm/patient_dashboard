@@ -68,13 +68,13 @@ router.post(
     } else {
       sortBy = req.body.sort;
     }
-    if(!(collection in collectionsObject)){
+    if (!(collection in collectionsObject)) {
       res.status(400).json({
         message: "Incorrect collection!",
       });
     }
-    queryCollection = collectionsObject[collection]
-    if(req.body.aggregate === undefined){
+    queryCollection = collectionsObject[collection];
+    if (req.body.aggregate === undefined) {
       const result = await queryCollection
         .find(query, fields)
         .sort(sortBy)
@@ -82,12 +82,17 @@ router.post(
       res.status(200).json({
         result: result,
       });
-    }
-    else{
-      const result = await queryCollection.aggregate(req.body.aggregate)
-      res.status(200).json({
-        result: result,
-      });
+    } else {
+      try {
+        const result = await queryCollection.aggregate(req.body.aggregate);
+        res.status(200).json({
+          result: result,
+        });
+      } catch (error) {
+        res.status(400).json({
+          error: error,
+        });
+      }
     }
   })
 );

@@ -98,3 +98,9 @@ code {
   grid-row: h1 / h2;
   padding: 5px;
 }
+
+.y-axis-parameters{
+  overflow-y: auto;
+  height: 300px;
+  padding-top: 10px;
+}
